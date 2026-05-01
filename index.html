@@ -2,66 +2,83 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محرر إكسل مع حساب الفارق</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>جرد الأصناف</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body {
-            margin: 0; padding: 16px; background: #f5f5f5;
-            max-width: 100%; overflow-x: hidden;
+            margin: 0; padding: 8px; background: #f5f5f5; font-size: 13px;
         }
-        h1 { font-size: 22px; margin: 0 0 16px 0; color: #1a1a1a; }
-       .card {
-            background: white; border-radius: 12px; padding: 16px;
-            margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0.1);
-        }
-        button, select, input[type="file"] {
-            width: 100%; padding: 12px; border-radius: 8px;
-            border: 1px solid #ddd; font-size: 16px; margin: 8px 0;
+        h1 { font-size: 18px; margin: 0 0 12px 0; color: #1a1a1a; text-align: center; }
+      .card {
+            background: white; border-radius: 10px; padding: 12px;
+            margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
         button {
-            background: #0066ff; color: white; border: none;
-            font-weight: 600; cursor: pointer;
+            width: 100%; padding: 10px; border-radius: 8px; border: none;
+            background: #0066ff; color: white; font-weight: 600;
+            font-size: 14px; margin: 6px 0; cursor: pointer;
         }
-        button:active { background: #0052cc; }
-        label { display: block; font-weight: 600; margin-top: 12px; color: #333; }
-       .table-wrapper { overflow-x: auto; margin-top: 16px; }
+        input[type="file"] {
+            width: 100%; padding: 8px; border-radius: 8px;
+            border: 1px solid #ddd; font-size: 13px; margin: 6px 0;
+        }
+        label { display: block; font-weight: 600; margin-top: 8px; color: #333; font-size: 13px; }
+        select {
+            width: 100%; padding: 8px; border-radius: 8px;
+            border: 1px solid #ddd; font-size: 13px; margin: 4px 0 8px 0;
+        }
+      .table-wrapper { overflow-x: auto; margin-top: 8px; }
         table {
-            width: 100%; border-collapse: collapse; font-size: 14px;
-            min-width: 500px;
+            width: 100%; border-collapse: collapse; font-size: 12px;
+            table-layout: fixed;
         }
         th, td {
-            border: 1px solid #e0e0e0; padding: 8px; text-align: center;
+            border: 1px solid #e0e0e0; padding: 6px 2px; text-align: center;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
-        th { background: #f8f8f8; font-weight: 600; position: sticky; top: 0; }
+        th {
+            background: #f8f8f8; font-weight: 600; position: sticky; top: 0;
+            font-size: 11px;
+        }
+        /* أحجام الأعمدة مناسبة للجوال */
+        th:nth-child(1), td:nth-child(1) { width: 15%; } /* رقم الصنف */
+        th:nth-child(2), td:nth-child(2) { width: 25%; } /* اسم الصنف */
+        th:nth-child(3), td:nth-child(3) { width: 18%; } /* الكمية */
+        th:nth-child(4), td:nth-child(4) { width: 18%; } /* الجرد */
+        th:nth-child(5), td:nth-child(5) { width: 24%; } /* الفارق */
+
         td input {
             width: 100%; border: none; background: transparent;
-            text-align: center; padding: 4px; font-size: 14px;
+            text-align: center; padding: 2px; font-size: 12px;
         }
         td input:focus { outline: 2px solid #0066ff; background: #f0f7ff; }
-       .diff-col { background: #fff8e1; font-weight: 600; }
-       .diff-negative { color: #d32f2f; }
-       .diff-positive { color: #2e7d32; }
-       .hidden { display: none; }
-       .row-count { font-size: 13px; color: #666; margin-top: 8px; }
+      .diff-col { background: #fff8e1; font-weight: 600; }
+      .diff-negative { color: #d32f2f; }
+      .diff-positive { color: #2e7d32; }
+      .diff-zero { color: #666; }
+      .hidden { display: none; }
+      .row-count { font-size: 11px; color: #666; margin-top: 6px; text-align: center; }
+      .tip { font-size: 11px; color: #666; text-align: center; margin-top: 4px; }
     </style>
 </head>
 <body>
-    <h1>محرر إكسل + حساب الفارق</h1>
+    <h1>جرد الأصناف - حساب الفارق</h1>
 
     <div class="card">
         <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-        <button onclick="exportExcel()">حفظ كملف إكسل جديد</button>
+        <button onclick="exportExcel()">حفظ النتيجة كملف إكسل</button>
         <div class="row-count" id="rowCount"></div>
+        <div class="tip">اسحب الجدول يمين/يسار لو الأعمدة ما تبين كاملة</div>
     </div>
 
-    <div class="card" id="controlsCard" class="hidden">
-        <label>العمود الأول:</label>
-        <select id="col1"></select>
+    <div class="card hidden" id="controlsCard">
+        <label>عمود الكمية:</label>
+        <select id="colQty"></select>
 
-        <label>العمود الثاني:</label>
-        <select id="col2"></select>
+        <label>عمود الجرد:</label>
+        <select id="colStock"></select>
     </div>
 
     <div class="card">
@@ -75,8 +92,8 @@ let workbookData = [];
 let headers = [];
 
 document.getElementById('fileInput').addEventListener('change', handleFile);
-document.getElementById('col1').addEventListener('change', updateDiff);
-document.getElementById('col2').addEventListener('change', updateDiff);
+document.getElementById('colQty').addEventListener('change', updateDiff);
+document.getElementById('colStock').addEventListener('change', updateDiff);
 
 function handleFile(e) {
     const file = e.target.files[0];
@@ -94,9 +111,21 @@ function handleFile(e) {
         headers = workbookData[0].map((h, i) => h || `عمود ${i+1}`);
         renderTable();
         setupColumnSelectors();
+        autoSelectColumns();
         document.getElementById('controlsCard').classList.remove('hidden');
     };
     reader.readAsArrayBuffer(file);
+}
+
+function autoSelectColumns() {
+    // يحاول يختار الكمية والجرد تلقائياً لو لقاها
+    const qtyIdx = headers.findIndex(h => h.includes('الكمية'));
+    const stockIdx = headers.findIndex(h => h.includes('الجرد'));
+
+    if (qtyIdx!== -1) document.getElementById('colQty').value = qtyIdx;
+    if (stockIdx!== -1) document.getElementById('colStock').value = stockIdx;
+
+    updateDiff();
 }
 
 function renderTable() {
@@ -144,40 +173,37 @@ function renderTable() {
     }
     table.appendChild(tbody);
 
-    document.getElementById('rowCount').textContent = `عدد الصفوف: ${workbookData.length - 1}`;
-    updateDiff();
+    document.getElementById('rowCount').textContent = `عدد الأصناف: ${workbookData.length - 1}`;
 }
 
 function setupColumnSelectors() {
-    const col1 = document.getElementById('col1');
-    const col2 = document.getElementById('col2');
-    col1.innerHTML = '';
-    col2.innerHTML = '';
+    const colQty = document.getElementById('colQty');
+    const colStock = document.getElementById('colStock');
+    colQty.innerHTML = '';
+    colStock.innerHTML = '';
 
     headers.forEach((h, i) => {
-        col1.add(new Option(h, i));
-        col2.add(new Option(h, i));
+        colQty.add(new Option(h, i));
+        colStock.add(new Option(h, i));
     });
-
-    if (headers.length >= 2) {
-        col1.value = 0;
-        col2.value = 1;
-    }
 }
 
 function updateDiff() {
-    const col1Idx = parseInt(document.getElementById('col1').value);
-    const col2Idx = parseInt(document.getElementById('col2').value);
+    const qtyIdx = parseInt(document.getElementById('colQty').value);
+    const stockIdx = parseInt(document.getElementById('colStock').value);
 
     for (let i = 1; i < workbookData.length; i++) {
-        const val1 = parseFloat(workbookData[i][col1Idx]) || 0;
-        const val2 = parseFloat(workbookData[i][col2Idx]) || 0;
-        const diff = val1 - val2;
+        const valQty = parseFloat(workbookData[i][qtyIdx]) || 0;
+        const valStock = parseFloat(workbookData[i][stockIdx]) || 0;
+        const diff = valQty - valStock;
         const diffCell = document.getElementById(`diff-${i}`);
 
         if (diffCell) {
             diffCell.textContent = diff.toFixed(2);
-            diffCell.className = 'diff-col ' + (diff < 0? 'diff-negative' : diff >= 0? 'diff-positive' : '');
+            diffCell.className = 'diff-col ';
+            if (diff < 0) diffCell.className += 'diff-negative';
+            else if (diff > 0) diffCell.className += 'diff-positive';
+            else diffCell.className += 'diff-zero';
         }
     }
 }
@@ -189,21 +215,21 @@ function exportExcel() {
     }
 
     const exportData = [ [...headers, 'الفارق'] ];
-    const col1Idx = parseInt(document.getElementById('col1').value);
-    const col2Idx = parseInt(document.getElementById('col2').value);
+    const qtyIdx = parseInt(document.getElementById('colQty').value);
+    const stockIdx = parseInt(document.getElementById('colStock').value);
 
     for (let i = 1; i < workbookData.length; i++) {
         const row = [...workbookData[i]];
-        const val1 = parseFloat(row[col1Idx]) || 0;
-        const val2 = parseFloat(row[col2Idx]) || 0;
-        row.push(val1 - val2);
+        const valQty = parseFloat(row[qtyIdx]) || 0;
+        const valStock = parseFloat(row[stockIdx]) || 0;
+        row.push((valQty - valStock).toFixed(2));
         exportData.push(row);
     }
 
     const ws = XLSX.utils.aoa_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'النتيجة');
-    XLSX.writeFile(wb, 'النتيجة.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, 'نتيجة الجرد');
+    XLSX.writeFile(wb, 'نتيجة_الجرد.xlsx');
 }
 </script>
 </body>
