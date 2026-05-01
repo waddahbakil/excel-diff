@@ -11,7 +11,7 @@
             margin: 0; padding: 8px; background: #f5f5f5; font-size: 13px;
         }
         h1 { font-size: 18px; margin: 0 0 12px 0; color: #1a1a1a; text-align: center; }
-    .card {
+  .card {
             background: white; border-radius: 10px; padding: 12px;
             margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
@@ -32,7 +32,7 @@
             width: 100%; padding: 8px; border-radius: 8px;
             border: 1px solid #ddd; font-size: 13px; margin: 4px 0 8px 0;
         }
-    .table-wrapper { overflow-x: auto; margin-top: 8px; }
+  .table-wrapper { overflow-x: auto; margin-top: 8px; }
         table {
             width: 100%; border-collapse: collapse; font-size: 12px;
             table-layout: fixed;
@@ -58,32 +58,32 @@
             text-align: center; padding: 2px; font-size: 12px;
         }
         td input:focus { outline: 2px solid #0066ff; background: #f0f7ff; }
-    .diff-col { background: #fff8e1; font-weight: 600; }
-    .diff-negative { color: #d32f2f; }
-    .diff-positive { color: #2e7d32; }
-    .diff-zero { color: #666; }
-    .hidden { display: none; }
-    .row-count { font-size: 11px; color: #666; margin-top: 6px; text-align: center; }
-    .tip { font-size: 11px; color: #27ae60; text-align: center; margin-top: 4px; font-weight: 600; }
-    .btn-row { display: flex; gap: 8px; }
-    .btn-row button { flex: 1; }
-    .delete-btn {
+  .diff-col { background: #fff8e1; font-weight: 600; }
+  .diff-negative { color: #d32f2f; }
+  .diff-positive { color: #2e7d32; }
+  .diff-zero { color: #666; }
+  .hidden { display: none; }
+  .row-count { font-size: 11px; color: #666; margin-top: 6px; text-align: center; }
+  .tip { font-size: 11px; color: #27ae60; text-align: center; margin-top: 4px; font-weight: 600; }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row button { flex: 1; }
+  .delete-btn {
             background: #ff4444; color: white; border: none;
             padding: 4px 6px; border-radius: 4px; font-size: 10px;
             cursor: pointer; width: auto;
         }
-    .search-box {
+  .search-box {
             display: flex; gap: 8px; align-items: center; margin-bottom: 8px;
         }
-    .search-box input { flex: 1; margin: 0; }
-    .search-box button { width: auto; padding: 8px 12px; margin: 0; }
-    .total-box {
+  .search-box input { flex: 1; margin: 0; }
+  .search-box button { width: auto; padding: 8px 12px; margin: 0; }
+  .total-box {
             background: #e3f2fd; padding: 10px; border-radius: 8px;
             margin-top: 12px; text-align: center; font-weight: 600;
         }
-    .total-positive { color: #2e7d32; }
-    .total-negative { color: #d32f2f; }
-     tr.hidden-row { display: none; }
+  .total-positive { color: #2e7d32; }
+  .total-negative { color: #d32f2f; }
+    tr.hidden-row { display: none; }
     </style>
 </head>
 <body>
@@ -133,6 +133,19 @@ document.getElementById('colStock').addEventListener('change', () => { updateDif
 window.onload = function() {
     loadData();
 };
+
+function normalizeArabic(text) {
+    if (!text) return '';
+    return text.toString()
+      .toLowerCase()
+      .replace(/أ|إ|آ/g, 'ا') // توحيد الألف
+      .replace(/ة/g, 'ه') // تاء مربوطة = هاء
+      .replace(/ى/g, 'ي') // ألف مقصورة = ياء
+      .replace(/ئ|ؤ/g, 'ي') // همزات على كرسي
+      .replace(/[ًٌٍَُِّْ]/g, '') // إزالة التشكيل
+      .replace(/\s+/g, ' ') // مسافات متعددة = مسافة واحدة
+      .trim();
+}
 
 function saveData() {
     const dataToSave = {
@@ -199,8 +212,8 @@ function handleFile(e) {
 }
 
 function autoSelectColumns() {
-    const qtyIdx = headers.findIndex(h => h.includes('الكمية'));
-    const stockIdx = headers.findIndex(h => h.includes('الجرد'));
+    const qtyIdx = headers.findIndex(h => normalizeArabic(h).includes('كميه'));
+    const stockIdx = headers.findIndex(h => normalizeArabic(h).includes('جرد'));
 
     if (qtyIdx!== -1) document.getElementById('colQty').value = qtyIdx;
     if (stockIdx!== -1) document.getElementById('colStock').value = stockIdx;
@@ -219,7 +232,6 @@ function addNewRow() {
     renderTable();
     saveData();
 
-    // اسحب للأسفل عشان تشوف الصف الجديد
     setTimeout(() => {
         window.scrollTo(0, document.body.scrollHeight);
     }, 100);
@@ -227,18 +239,18 @@ function addNewRow() {
 
 function deleteRow(index) {
     if (confirm('متأكد تبي تحذف هذا الصنف؟')) {
-        workbookData.splice(index + 1, 1); // +1 لأن الصف 0 هو العناوين
+        workbookData.splice(index + 1, 1);
         renderTable();
         saveData();
     }
 }
 
 function searchItems() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
+    const query = normalizeArabic(document.getElementById('searchInput').value);
     const rows = document.querySelectorAll('#dataTable tbody tr');
 
     rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
+        const text = normalizeArabic(row.textContent);
         if (text.includes(query)) {
             row.classList.remove('hidden-row');
         } else {
