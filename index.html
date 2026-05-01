@@ -11,7 +11,7 @@
             margin: 0; padding: 8px; background: #f5f5f5; font-size: 13px;
         }
         h1 { font-size: 18px; margin: 0 0 12px 0; color: #1a1a1a; text-align: center; }
-      .card {
+     .card {
             background: white; border-radius: 10px; padding: 12px;
             margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
@@ -20,6 +20,8 @@
             background: #0066ff; color: white; font-weight: 600;
             font-size: 14px; margin: 6px 0; cursor: pointer;
         }
+        button.danger { background: #d32f2f; }
+        button:active { opacity: 0.8; }
         input[type="file"] {
             width: 100%; padding: 8px; border-radius: 8px;
             border: 1px solid #ddd; font-size: 13px; margin: 6px 0;
@@ -29,7 +31,7 @@
             width: 100%; padding: 8px; border-radius: 8px;
             border: 1px solid #ddd; font-size: 13px; margin: 4px 0 8px 0;
         }
-      .table-wrapper { overflow-x: auto; margin-top: 8px; }
+     .table-wrapper { overflow-x: auto; margin-top: 8px; }
         table {
             width: 100%; border-collapse: collapse; font-size: 12px;
             table-layout: fixed;
@@ -42,25 +44,26 @@
             background: #f8f8f8; font-weight: 600; position: sticky; top: 0;
             font-size: 11px;
         }
-        /* أحجام الأعمدة مناسبة للجوال */
-        th:nth-child(1), td:nth-child(1) { width: 15%; } /* رقم الصنف */
-        th:nth-child(2), td:nth-child(2) { width: 25%; } /* اسم الصنف */
-        th:nth-child(3), td:nth-child(3) { width: 18%; } /* الكمية */
-        th:nth-child(4), td:nth-child(4) { width: 18%; } /* الجرد */
-        th:nth-child(5), td:nth-child(5) { width: 24%; } /* الفارق */
+        th:nth-child(1), td:nth-child(1) { width: 15%; }
+        th:nth-child(2), td:nth-child(2) { width: 25%; }
+        th:nth-child(3), td:nth-child(3) { width: 18%; }
+        th:nth-child(4), td:nth-child(4) { width: 18%; }
+        th:nth-child(5), td:nth-child(5) { width: 24%; }
 
         td input {
             width: 100%; border: none; background: transparent;
             text-align: center; padding: 2px; font-size: 12px;
         }
         td input:focus { outline: 2px solid #0066ff; background: #f0f7ff; }
-      .diff-col { background: #fff8e1; font-weight: 600; }
-      .diff-negative { color: #d32f2f; }
-      .diff-positive { color: #2e7d32; }
-      .diff-zero { color: #666; }
-      .hidden { display: none; }
-      .row-count { font-size: 11px; color: #666; margin-top: 6px; text-align: center; }
-      .tip { font-size: 11px; color: #666; text-align: center; margin-top: 4px; }
+     .diff-col { background: #fff8e1; font-weight: 600; }
+     .diff-negative { color: #d32f2f; }
+     .diff-positive { color: #2e7d32; }
+     .diff-zero { color: #666; }
+     .hidden { display: none; }
+     .row-count { font-size: 11px; color: #666; margin-top: 6px; text-align: center; }
+     .tip { font-size: 11px; color: #27ae60; text-align: center; margin-top: 4px; font-weight: 600; }
+     .btn-row { display: flex; gap: 8px; }
+     .btn-row button { flex: 1; }
     </style>
 </head>
 <body>
@@ -68,9 +71,12 @@
 
     <div class="card">
         <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-        <button onclick="exportExcel()">حفظ النتيجة كملف إكسل</button>
+        <div class="btn-row">
+            <button onclick="exportExcel()">حفظ إكسل</button>
+            <button class="danger" onclick="clearData()">مسح الكل</button>
+        </div>
         <div class="row-count" id="rowCount"></div>
-        <div class="tip">اسحب الجدول يمين/يسار لو الأعمدة ما تبين كاملة</div>
+        <div class="tip">✓ يتم الحفظ تلقائياً</div>
     </div>
 
     <div class="card hidden" id="controlsCard">
@@ -92,8 +98,53 @@ let workbookData = [];
 let headers = [];
 
 document.getElementById('fileInput').addEventListener('change', handleFile);
-document.getElementById('colQty').addEventListener('change', updateDiff);
-document.getElementById('colStock').addEventListener('change', updateDiff);
+document.getElementById('colQty').addEventListener('change', () => { updateDiff(); saveData(); });
+document.getElementById('colStock').addEventListener('change', () => { updateDiff(); saveData(); });
+
+// حمل البيانات المحفوظة أول ما تفتح الصفحة
+window.onload = function() {
+    loadData();
+};
+
+function saveData() {
+    const dataToSave = {
+        headers: headers,
+        workbookData: workbookData,
+        colQty: document.getElementById('colQty').value,
+        colStock: document.getElementById('colStock').value
+    };
+    localStorage.setItem('jardData', JSON.stringify(dataToSave));
+}
+
+function loadData() {
+    const saved = localStorage.getItem('jardData');
+    if (saved) {
+        const data = JSON.parse(saved);
+        headers = data.headers || [];
+        workbookData = data.workbookData || [];
+
+        if (workbookData.length > 0) {
+            renderTable();
+            setupColumnSelectors();
+            document.getElementById('colQty').value = data.colQty || 0;
+            document.getElementById('colStock').value = data.colStock || 1;
+            document.getElementById('controlsCard').classList.remove('hidden');
+            updateDiff();
+        }
+    }
+}
+
+function clearData() {
+    if (confirm('متأكد تبي تمسح كل البيانات؟ ما تقدر ترجعها')) {
+        localStorage.removeItem('jardData');
+        workbookData = [];
+        headers = [];
+        document.getElementById('dataTable').innerHTML = '';
+        document.getElementById('controlsCard').classList.add('hidden');
+        document.getElementById('rowCount').textContent = '';
+        document.getElementById('fileInput').value = '';
+    }
+}
 
 function handleFile(e) {
     const file = e.target.files[0];
@@ -113,12 +164,12 @@ function handleFile(e) {
         setupColumnSelectors();
         autoSelectColumns();
         document.getElementById('controlsCard').classList.remove('hidden');
+        saveData();
     };
     reader.readAsArrayBuffer(file);
 }
 
 function autoSelectColumns() {
-    // يحاول يختار الكمية والجرد تلقائياً لو لقاها
     const qtyIdx = headers.findIndex(h => h.includes('الكمية'));
     const stockIdx = headers.findIndex(h => h.includes('الجرد'));
 
@@ -132,7 +183,6 @@ function renderTable() {
     const table = document.getElementById('dataTable');
     table.innerHTML = '';
 
-    // Header
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     headers.forEach(h => {
@@ -147,7 +197,6 @@ function renderTable() {
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
-    // Body
     const tbody = document.createElement('tbody');
     for (let i = 1; i < workbookData.length; i++) {
         const row = document.createElement('tr');
@@ -159,6 +208,7 @@ function renderTable() {
             input.oninput = (e) => {
                 workbookData[i][colIdx] = e.target.value;
                 updateDiff();
+                saveData(); // حفظ تلقائي مع كل تعديل
             };
             td.appendChild(input);
             row.appendChild(td);
