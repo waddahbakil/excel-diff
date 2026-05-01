@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محرر إكسل مع حساب الفارق</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body {
+            margin: 0; padding: 16px; background: #f5f5f5;
+            max-width: 100%; overflow-x: hidden;
+        }
+        h1 { font-size: 22px; margin: 0 0 16px 0; color: #1a1a1a; }
+       .card {
+            background: white; border-radius: 12px; padding: 16px;
+            margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0.1);
+        }
+        button, select, input[type="file"] {
+            width: 100%; padding: 12px; border-radius: 8px;
+            border: 1px solid #ddd; font-size: 16px; margin: 8px 0;
+        }
+        button {
+            background: #0066ff; color: white; border: none;
+            font-weight: 600; cursor: pointer;
+        }
+        button:active { background: #0052cc; }
+        label { display: block; font-weight: 600; margin-top: 12px; color: #333; }
+       .table-wrapper { overflow-x: auto; margin-top: 16px; }
+        table {
+            width: 100%; border-collapse: collapse; font-size: 14px;
+            min-width: 500px;
+        }
+        th, td {
+            border: 1px solid #e0e0e0; padding: 8px; text-align: center;
+        }
+        th { background: #f8f8f8; font-weight: 600; position: sticky; top: 0; }
+        td input {
+            width: 100%; border: none; background: transparent;
+            text-align: center; padding: 4px; font-size: 14px;
+        }
+        td input:focus { outline: 2px solid #0066ff; background: #f0f7ff; }
+       .diff-col { background: #fff8e1; font-weight: 600; }
+       .diff-negative { color: #d32f2f; }
+       .diff-positive { color: #2e7d32; }
+       .hidden { display: none; }
+       .row-count { font-size: 13px; color: #666; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <h1>محرر إكسل + حساب الفارق</h1>
+
+    <div class="card">
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+        <button onclick="exportExcel()">حفظ كملف إكسل جديد</button>
+        <div class="row-count" id="rowCount"></div>
+    </div>
+
+    <div class="card" id="controlsCard" class="hidden">
+        <label>العمود الأول:</label>
+        <select id="col1"></select>
+
+        <label>العمود الثاني:</label>
+        <select id="col2"></select>
+    </div>
+
+    <div class="card">
+        <div class="table-wrapper">
+            <table id="dataTable"></table>
+        </div>
+    </div>
+
+<script>
+let workbookData = [];
+let headers = [];
+
+document.getElementById('fileInput').addEventListener('change', handleFile);
+document.getElementById('col1').addEventListener('change', updateDiff);
+document.getElementById('col2').addEventListener('change', updateDiff);
+
+function handleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        workbookData = XLSX.utils.sheet_to_json(sheet, {header: 1});
+
+        if (workbookData.length === 0) return;
+
+        headers = workbookData[0].map((h, i) => h || `عمود ${i+1}`);
+        renderTable();
+        setupColumnSelectors();
+        document.getElementById('controlsCard').classList.remove('hidden');
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function renderTable() {
+    const table = document.getElementById('dataTable');
+    table.innerHTML = '';
+
+    // Header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        headerRow.appendChild(th);
+    });
+    const thDiff = document.createElement('th');
+    thDiff.textContent = 'الفارق';
+    thDiff.className = 'diff-col';
+    headerRow.appendChild(thDiff);
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Body
+    const tbody = document.createElement('tbody');
+    for (let i = 1; i < workbookData.length; i++) {
+        const row = document.createElement('tr');
+        headers.forEach((h, colIdx) => {
+            const td = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = workbookData[i][colIdx] || '';
+            input.oninput = (e) => {
+                workbookData[i][colIdx] = e.target.value;
+                updateDiff();
+            };
+            td.appendChild(input);
+            row.appendChild(td);
+        });
+
+        const tdDiff = document.createElement('td');
+        tdDiff.className = 'diff-col';
+        tdDiff.id = `diff-${i}`;
+        tdDiff.textContent = '-';
+        row.appendChild(tdDiff);
+        tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+
+    document.getElementById('rowCount').textContent = `عدد الصفوف: ${workbookData.length - 1}`;
+    updateDiff();
+}
+
+function setupColumnSelectors() {
+    const col1 = document.getElementById('col1');
+    const col2 = document.getElementById('col2');
+    col1.innerHTML = '';
+    col2.innerHTML = '';
+
+    headers.forEach((h, i) => {
+        col1.add(new Option(h, i));
+        col2.add(new Option(h, i));
+    });
+
+    if (headers.length >= 2) {
+        col1.value = 0;
+        col2.value = 1;
+    }
+}
+
+function updateDiff() {
+    const col1Idx = parseInt(document.getElementById('col1').value);
+    const col2Idx = parseInt(document.getElementById('col2').value);
+
+    for (let i = 1; i < workbookData.length; i++) {
+        const val1 = parseFloat(workbookData[i][col1Idx]) || 0;
+        const val2 = parseFloat(workbookData[i][col2Idx]) || 0;
+        const diff = val1 - val2;
+        const diffCell = document.getElementById(`diff-${i}`);
+
+        if (diffCell) {
+            diffCell.textContent = diff.toFixed(2);
+            diffCell.className = 'diff-col ' + (diff < 0? 'diff-negative' : diff >= 0? 'diff-positive' : '');
+        }
+    }
+}
+
+function exportExcel() {
+    if (workbookData.length === 0) {
+        alert('ارفع ملف أولاً');
+        return;
+    }
+
+    const exportData = [ [...headers, 'الفارق'] ];
+    const col1Idx = parseInt(document.getElementById('col1').value);
+    const col2Idx = parseInt(document.getElementById('col2').value);
+
+    for (let i = 1; i < workbookData.length; i++) {
+        const row = [...workbookData[i]];
+        const val1 = parseFloat(row[col1Idx]) || 0;
+        const val2 = parseFloat(row[col2Idx]) || 0;
+        row.push(val1 - val2);
+        exportData.push(row);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'النتيجة');
+    XLSX.writeFile(wb, 'النتيجة.xlsx');
+}
+</script>
+</body>
+</html>
