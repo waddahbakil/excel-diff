@@ -7,83 +7,45 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body {
-            margin: 0; padding: 8px; background: #f5f5f5; font-size: 13px;
-        }
+        body { margin: 0; padding: 8px; background: #f5f5f5; font-size: 13px; }
         h1 { font-size: 18px; margin: 0 0 12px 0; color: #1a1a1a; text-align: center; }
-  .card {
-            background: white; border-radius: 10px; padding: 12px;
-            margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        }
-        button {
-            width: 100%; padding: 10px; border-radius: 8px; border: none;
-            background: #0066ff; color: white; font-weight: 600;
-            font-size: 14px; margin: 6px 0; cursor: pointer;
-        }
+       .card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        button { width: 100%; padding: 10px; border-radius: 8px; border: none; background: #0066ff; color: white; font-weight: 600; font-size: 14px; margin: 6px 0; cursor: pointer; }
         button.danger { background: #d32f2f; }
         button.success { background: #2e7d32; }
         button:active { opacity: 0.8; }
-        input[type="file"], input[type="text"] {
-            width: 100%; padding: 8px; border-radius: 8px;
-            border: 1px solid #ddd; font-size: 13px; margin: 6px 0;
-        }
+        input[type="file"], input[type="text"] { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; margin: 6px 0; }
         label { display: block; font-weight: 600; margin-top: 8px; color: #333; font-size: 13px; }
-        select {
-            width: 100%; padding: 8px; border-radius: 8px;
-            border: 1px solid #ddd; font-size: 13px; margin: 4px 0 8px 0;
-        }
-  .table-wrapper { overflow-x: auto; margin-top: 8px; }
-        table {
-            width: 100%; border-collapse: collapse; font-size: 12px;
-            table-layout: fixed;
-        }
-        th, td {
-            border: 1px solid #e0e0e0; padding: 6px 2px; text-align: center;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-            position: relative;
-        }
-        th {
-            background: #f8f8f8; font-weight: 600; position: sticky; top: 0;
-            font-size: 11px; z-index: 1;
-        }
+        select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; margin: 4px 0 8px 0; }
+       .table-wrapper { overflow-x: auto; margin-top: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+        th, td { border: 1px solid #e0e0e0; padding: 6px 2px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; position: relative; }
+        th { background: #f8f8f8; font-weight: 600; position: sticky; top: 0; font-size: 11px; z-index: 1; }
         th:nth-child(1), td:nth-child(1) { width: 13%; }
         th:nth-child(2), td:nth-child(2) { width: 22%; }
         th:nth-child(3), td:nth-child(3) { width: 16%; }
         th:nth-child(4), td:nth-child(4) { width: 16%; }
         th:nth-child(5), td:nth-child(5) { width: 22%; }
         th:nth-child(6), td:nth-child(6) { width: 11%; }
-
-        td input {
-            width: 100%; border: none; background: transparent;
-            text-align: center; padding: 2px; font-size: 12px;
-        }
+        td input { width: 100%; border: none; background: transparent; text-align: center; padding: 2px; font-size: 12px; }
         td input:focus { outline: 2px solid #0066ff; background: #f0f7ff; }
-  .diff-col { background: #fff8e1; font-weight: 600; }
-  .diff-negative { color: #d32f2f; }
-  .diff-positive { color: #2e7d32; }
-  .diff-zero { color: #666; }
-  .hidden { display: none; }
-  .row-count { font-size: 11px; color: #666; margin-top: 6px; text-align: center; }
-  .tip { font-size: 11px; color: #27ae60; text-align: center; margin-top: 4px; font-weight: 600; }
-  .btn-row { display: flex; gap: 8px; }
-  .btn-row button { flex: 1; }
-  .delete-btn {
-            background: #ff4444; color: white; border: none;
-            padding: 4px 6px; border-radius: 4px; font-size: 10px;
-            cursor: pointer; width: auto;
-        }
-  .search-box {
-            display: flex; gap: 8px; align-items: center; margin-bottom: 8px;
-        }
-  .search-box input { flex: 1; margin: 0; }
-  .search-box button { width: auto; padding: 8px 12px; margin: 0; }
-  .total-box {
-            background: #e3f2fd; padding: 10px; border-radius: 8px;
-            margin-top: 12px; text-align: center; font-weight: 600;
-        }
-  .total-positive { color: #2e7d32; }
-  .total-negative { color: #d32f2f; }
-    tr.hidden-row { display: none; }
+       .diff-col { background: #fff8e1; font-weight: 600; }
+       .diff-negative { color: #d32f2f; }
+       .diff-positive { color: #2e7d32; }
+       .diff-zero { color: #666; }
+       .hidden { display: none; }
+       .row-count { font-size: 11px; color: #666; margin-top: 6px; text-align: center; }
+       .tip { font-size: 11px; color: #27ae60; text-align: center; margin-top: 4px; font-weight: 600; }
+       .btn-row { display: flex; gap: 8px; }
+       .btn-row button { flex: 1; }
+       .delete-btn { background: #ff4444; color: white; border: none; padding: 4px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; width: auto; }
+       .search-box { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+       .search-box input { flex: 1; margin: 0; }
+       .search-box button { width: auto; padding: 8px 12px; margin: 0; }
+       .total-box { background: #e3f2fd; padding: 10px; border-radius: 8px; margin-top: 12px; text-align: center; font-weight: 600; }
+       .total-positive { color: #2e7d32; }
+       .total-negative { color: #d32f2f; }
+        tr.hidden-row { display: none; }
     </style>
 </head>
 <body>
@@ -137,14 +99,14 @@ window.onload = function() {
 function normalizeArabic(text) {
     if (!text) return '';
     return text.toString()
-      .toLowerCase()
-      .replace(/أ|إ|آ/g, 'ا') // توحيد الألف
-      .replace(/ة/g, 'ه') // تاء مربوطة = هاء
-      .replace(/ى/g, 'ي') // ألف مقصورة = ياء
-      .replace(/ئ|ؤ/g, 'ي') // همزات على كرسي
-      .replace(/[ًٌٍَُِّْ]/g, '') // إزالة التشكيل
-      .replace(/\s+/g, ' ') // مسافات متعددة = مسافة واحدة
-      .trim();
+     .toLowerCase()
+     .replace(/أ|إ|آ/g, 'ا')
+     .replace(/ة/g, 'ه')
+     .replace(/ى/g, 'ي')
+     .replace(/ئ|ؤ/g, 'ي')
+     .replace(/[ًٌٍَُِّْ]/g, '')
+     .replace(/\s+/g, ' ')
+     .trim();
 }
 
 function saveData() {
@@ -223,7 +185,7 @@ function autoSelectColumns() {
 
 function addNewRow() {
     if (headers.length === 0) {
-        alert('ارفع ملف أولاً أو أنشئ الأعمدة');
+        alert('ارفع ملف أولاً');
         return;
     }
 
@@ -247,16 +209,33 @@ function deleteRow(index) {
 
 function searchItems() {
     const query = normalizeArabic(document.getElementById('searchInput').value);
-    const rows = document.querySelectorAll('#dataTable tbody tr');
+    const tbody = document.querySelector('#dataTable tbody');
+    if (!tbody) return;
 
-    rows.forEach(row => {
-        const text = normalizeArabic(row.textContent);
-        if (text.includes(query)) {
+    const rows = tbody.querySelectorAll('tr');
+
+    // لو البحث فاضي، أظهر الكل
+    if (!query) {
+        rows.forEach(row => row.classList.remove('hidden-row'));
+        return;
+    }
+
+    // ابحث في البيانات الأصلية مباشرة
+    for (let i = 1; i < workbookData.length; i++) {
+        const row = tbody.querySelector(`tr[data-index="${i-1}"]`);
+        if (!row) continue;
+
+        let rowText = '';
+        workbookData[i].forEach(cell => {
+            rowText += ' ' + normalizeArabic(cell);
+        });
+
+        if (rowText.includes(query)) {
             row.classList.remove('hidden-row');
         } else {
             row.classList.add('hidden-row');
         }
-    });
+    }
 }
 
 function clearSearch() {
@@ -290,7 +269,7 @@ function renderTable() {
     const tbody = document.createElement('tbody');
     for (let i = 1; i < workbookData.length; i++) {
         const row = document.createElement('tr');
-        row.dataset.index = i - 1;
+        row.dataset.index = i - 1; // مهم للبحث
 
         headers.forEach((h, colIdx) => {
             const td = document.createElement('td');
